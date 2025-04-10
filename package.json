@@ -4,10 +4,11 @@
     "type": "module",
     "main": "dist/index.js",
     "scripts": {
-        "dev": "tsx server/index.ts",
-        "build": "npx esbuild index.ts --platform=node --bundle --format=esm --outdir=dist --external:drizzle-orm --external:drizzle-orm/pg-core --external:drizzle-orm/neon-http --external:drizzle-zod",
-        "start": "NODE_ENV=production node dist/index.js"
-    },
+  "dev": "tsx index.ts",
+  "build": "npx esbuild index.ts --platform=node --bundle --format=esm --outdir=dist --external:drizzle-orm --external:drizzle-orm/pg-core --external:drizzle-orm/neon-http --external:drizzle-zod",
+  "start": "NODE_ENV=production node dist/index.js"
+}
+,
     "dependencies": {
         "@neondatabase/serverless": "^0.10.4",
         "connect-pg-simple": "^10.0.0",
