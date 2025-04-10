@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx index.ts",
-    "build": "npm install && npx esbuild index.ts --platform=node --bundle --format=esm --outdir=dist",
+    "build": "npm install && npx esbuild index.ts --platform=node --bundle --format=esm --outdir=dist --external:drizzle-orm --external:drizzle-orm/pg-core --external:drizzle-orm/neon-http --external:drizzle-zod",
     "start": "NODE_ENV=production node dist/index.js"
   },
  "dependencies": {
