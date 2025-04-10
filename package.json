@@ -4,11 +4,11 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "tsx index.ts",
-    "build": "tsc",
-    "start": "NODE_ENV=production node dist/index.js",
-    "postinstall": "npm install"
-  },
+  "postinstall": "npm install",
+  "build": "tsc",
+  "start": "NODE_ENV=production node dist/index.js"
+}
+,
   "dependencies": {
     "express": "^4.21.2",
     "express-session": "^1.18.1",
