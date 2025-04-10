@@ -55,20 +55,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     path: '/ws',
   });
   
-  log('WebSocket server initialized', 'websocket');
+  console.log('WebSocket server initialized', 'websocket');
   
   wss.on('connection', (ws: WebSocket) => {
-    log('New WebSocket connection established', 'websocket');
+    console.log('New WebSocket connection established', 'websocket');
     (ws as any).userId = null;
     
     ws.on('message', (messageData: string) => {
       try {
-        log(`Received WebSocket message: ${messageData}`, 'websocket');
+        console.log(`Received WebSocket message: ${messageData}`, 'websocket');
         const data = JSON.parse(messageData);
         
         if (data.type === 'authenticate' && data.userId) {
           const userId = Number(data.userId);
-          log(`User ${userId} authenticated via WebSocket`, 'websocket');
+          console.log(`User ${userId} authenticated via WebSocket`, 'websocket');
           (ws as any).userId = userId;
           activeConnections.set(userId, ws);
           
@@ -81,18 +81,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const userId = Number(data.userId);
           const teamId = Number(data.teamId);
           
-          log(`Starting match simulation for user ${userId}, team ${teamId}`, 'websocket');
+          console.log(`Starting match simulation for user ${userId}, team ${teamId}`, 'websocket');
           handleMatchSimulation(ws, userId, teamId);
         }
         else {
-          log(`Unknown message type: ${data.type}`, 'websocket');
+          console.log(`Unknown message type: ${data.type}`, 'websocket');
           ws.send(JSON.stringify({ 
             type: 'error', 
             message: 'Unknown message type'
           }));
         }
       } catch (error) {
-        log(`WebSocket message parsing error: ${error instanceof Error ? error.message : String(error)}`, 'websocket');
+        console.log(`WebSocket message parsing error: ${error instanceof Error ? error.message : String(error)}`, 'websocket');
         ws.send(JSON.stringify({ 
           type: 'error', 
           message: 'Invalid message format' 
@@ -103,15 +103,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     ws.on('close', () => {
       const userId = (ws as any).userId;
       if (userId) {
-        log(`WebSocket connection closed for user ${userId}`, 'websocket');
+        console.log(`WebSocket connection closed for user ${userId}`, 'websocket');
         activeConnections.delete(userId);
       } else {
-        log('WebSocket connection closed (unauthenticated)', 'websocket');
+        console.log('WebSocket connection closed (unauthenticated)', 'websocket');
       }
     });
     
     ws.on('error', (error) => {
-      log(`WebSocket error: ${error.message}`, 'websocket');
+      console.log(`WebSocket error: ${error.message}`, 'websocket');
     });
     
     ws.send(JSON.stringify({ 
