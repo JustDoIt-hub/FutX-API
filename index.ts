@@ -1,17 +1,11 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import path from "path";
-import { fileURLToPath } from "url";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Setup __dirname for ESM environments
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Logger middleware
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -53,16 +47,14 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // Setup frontend serving
+  // Import serveStatic here for production
   if (app.get("env") === "development") {
-    await setupVite(app, server); // You still need to define this if using Vite dev server
+    await setupVite(app, server);
   } else {
-    const distPath = path.join(__dirname, "dist"); // or "build" for React
-    app.use(express.static(distPath));
-
-    app.get("*", (_req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
+    // Fallback static file handler
+    const serveStatic = require("serve-static");
+    const distPath = path.join(__dirname, "dist", "client");
+    app.use(serveStatic(distPath));
   }
 
   const port = 5000;
@@ -74,4 +66,3 @@ app.use((req, res, next) => {
     log(`serving on port ${port}`);
   });
 })();
-
