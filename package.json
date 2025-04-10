@@ -5,7 +5,7 @@
     "main": "dist/index.js",
     "scripts": {
   "dev": "tsx index.ts",
-  "build": "npx esbuild index.ts --platform=node --bundle --format=esm --outdir=dist --external:express --external:express-session --external:memorystore --external:ws --external:zod --external:dotenv --external:passport --external:passport-local --external:@neondatabase/serverless --external:connect-pg-simple --external:drizzle-orm --external:drizzle-orm/pg-core --external:drizzle-orm/neon-http --external:drizzle-zod --external:zod-validation-error",
+  "build": "npx esbuild index.ts --platform=node --bundle --format=esm --outdir=dist",
   "start": "NODE_ENV=production node dist/index.js"
 }
 ,
