@@ -1,28 +1,25 @@
 {
-    "name": "futdraft-backend",
-    "version": "1.0.0",
-    "type": "module",
-    "main": "dist/index.js",
-    "scripts": {
-      "dev": "tsx server/index.ts",
-      "build": "esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
-      "start": "NODE_ENV=production node dist/index.js"
-    },
-    "dependencies": {
-      "express": "^4.21.2",
-      "express-session": "^1.18.1",
-      "connect-pg-simple": "^10.0.0",
-      "dotenv": "^16.4.7",
-      "ws": "^8.18.1",
-      "passport": "^0.7.0",
-      "passport-local": "^1.0.0",
-      "@neondatabase/serverless": "^0.10.4"
-      "esbuild": "^0.25.0",
-      "tsx": "^4.19.1",
-      "typescript": "^5.6.3"
-    },
-    "devDependencies": {
-     
-    }
-  }
-  
+  "name": "futdraft-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx server/index.ts",
+    "build": "esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "start": "NODE_ENV=production node dist/index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "connect-pg-simple": "^10.0.0",
+    "dotenv": "^16.4.7",
+    "ws": "^8.18.1",
+    "passport": "^0.7.0",
+    "passport-local": "^1.0.0",
+    "@neondatabase/serverless": "^0.10.4",
+    "esbuild": "^0.25.0",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3"
+  },
+  "devDependencies": {}
+}
