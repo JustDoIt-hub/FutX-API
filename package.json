@@ -8,6 +8,7 @@
   "build": "esbuild server/index.ts --platform=node --bundle --format=esm --outdir=dist",
   "start": "NODE_ENV=production node dist/index.js"
 }
+
 ,
   "dependencies": {
     "express": "^4.21.2",
