@@ -3,7 +3,6 @@ import { storage } from '../storage';
 import { telegramAuthSchema } from '@shared/schema';
 import { ZodError } from 'zod';
 import { fromZodError } from 'zod-validation-error';
-import { log } from '../vite';
 import 'express-session';
 
 // Extend the session type to include userId
