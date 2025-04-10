@@ -4,7 +4,6 @@ import { storage } from "./storage";
 import session from "express-session";
 import memorystore from "memorystore";
 import { WebSocketServer, WebSocket } from "ws";
-import { log } from "./vite";
 
 // Import controllers
 import { login, getCurrentUser, logout } from "./controllers/auth";
