@@ -6,8 +6,10 @@
   "scripts": {
   "dev": "tsx index.ts",
   "build": "npx esbuild index.ts --platform=node --bundle --format=esm --packages=external --outdir=dist",
-  "start": "NODE_ENV=production node dist/index.js"
+  "start": "NODE_ENV=production node dist/index.js",
+  "postinstall": "npm install"
 }
+
 ,
   "dependencies": {
     "express": "^4.21.2",
