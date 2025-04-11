@@ -63,7 +63,7 @@ export const positionEnum = pgEnum("position", [
 
 // Available events for players
 export const eventEnum = pgEnum("event", [
-  "ICY_MAGICIANS", "FUTURE_STARS", "ICONS", "GOLD"
+  "ICY_MAGICIANS", "FUTURE_STARS", "ICON", "GOLD"
 ]);
 
 
@@ -91,6 +91,11 @@ export const insertSpinUserSchema = createInsertSchema(users).pick({
 }).extend({
   howgot: z.literal('hunt'),
   tradable: z.literal(false),
+});
+
+
+export const spinRequestSchema = z.object({
+  type: z.enum(["position", "event", "ovr", "all"]),
 });
 
 export type Player = typeof players.$inferSelect;
