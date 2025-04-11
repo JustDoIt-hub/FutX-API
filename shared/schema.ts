@@ -1,5 +1,6 @@
 import { pgTable, text, serial, integer, boolean, json, timestamp, pgEnum,bigint,varchar} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
+import { relations } from "drizzle-orm";
 import { z } from "zod";
 import 'dotenv/config';
 
