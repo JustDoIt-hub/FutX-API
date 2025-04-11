@@ -1,11 +1,14 @@
-import { neon, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
 
-// Configure neon client to use fetch API
-neonConfig.fetchConnectionCache = true;
+const pool = new Pool({
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT),
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+});
 
-// Use environment variable for database connection
-const sql = neon(process.env.DATABASE_URL!);
 
-// Create and export database client
-export const db = drizzle(sql);
+// Export the Drizzle client
+export const db = drizzle(pool);
