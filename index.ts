@@ -1,13 +1,15 @@
 import express, { type Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { registerRoutes } from "./routes";
-import { log } from "./vite"; // Keep only log if you still use it
+
+// Simple logger function to replace `log` from vite.ts
+const log = (...args: any[]) => console.log("[LOG]", ...args);
 
 const app = express();
 
 // Enable CORS for your frontend (adjust origin as needed)
 app.use(cors({
-  origin: "https://fut-x.netlify.app", // or use "*" during testing
+  origin: "https://fut-x.netlify.app", // Or use "*" for testing
   credentials: true,
 }));
 
