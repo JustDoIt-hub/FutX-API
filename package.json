@@ -4,8 +4,8 @@
     "type": "module",
     "main": "dist/index.js",
     "scripts": {
-        "dev": "tsx /index.ts",
-        "build": "esbuild /index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+        "dev": "tsx index.ts",
+        "build": "esbuild index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
         "start": "NODE_ENV=production node dist/index.js"
     },
     "dependencies": {
