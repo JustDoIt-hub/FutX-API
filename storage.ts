@@ -4,6 +4,7 @@ import {
   userPlayers, type UserPlayer, type InsertUserPlayer,
   spinHistory, type SpinHistory, type InsertSpinHistory
 } from "@shared/schema";
+
 import { db } from "./db";
 import { eq, and, sql as sqlQuery, desc } from "drizzle-orm";
 
@@ -16,7 +17,7 @@ export interface IStorage {
   getPlayer(id: number): Promise<Player | undefined>;
   getPlayersByIds(ids: number[]): Promise<Player[]>;
   getPlayersByPosition(position: string): Promise<Player[]>;
-  getRandomPlayerByFilters(position: string, event: string, overallRange: string): Promise<Player | undefined>;
+  getRandomPlayerByFilters(position: string, category: string): Promise<Player | undefined>;
 
   getUserPlayers(userId: number): Promise<Player[]>;
   addPlayerToUser(userId: number, playerId: number): Promise<UserPlayer>;
@@ -62,22 +63,13 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(players).where(eq(players.position, position));
   }
 
-  async getRandomPlayerByFilters(position: string, event: string, overallRange: string): Promise<Player | undefined> {
-    let min = 1, max = 99;
-    if (overallRange.includes("-")) {
-      [min, max] = overallRange.split("-").map(Number);
-    } else if (overallRange.includes("+")) {
-      min = parseInt(overallRange.replace("+", ""));
-    }
-
+  async getRandomPlayerByFilters(position: string, category: string): Promise<Player | undefined> {
     const [player] = await db
       .select()
       .from(players)
       .where(and(
         eq(players.position, position),
-        eq(players.event, event),
-        sqlQuery`${players.overall} >= ${min}`,
-        sqlQuery`${players.overall} <= ${max}`
+        eq(players.category, category) // `category` is your event
       ))
       .orderBy(sqlQuery`RANDOM()`)
       .limit(1);
@@ -140,5 +132,4 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-// Export single instance
 export const storage = new DatabaseStorage();
