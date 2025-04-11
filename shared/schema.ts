@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, json, timestamp, pgEnum,bigint,varchar,bytea } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, json, timestamp, pgEnum,bigint,varchar} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import 'dotenv/config';
@@ -41,7 +41,7 @@ export const players = pgTable("players", {
   attack: integer("attack").default(0),
   defense: integer("defense").default(0),
   hp: integer("hp").default(100),
-  imageData: bytea("image_data"),
+  imageData: text("image_data"),
   gifFileId: text("gif_file_id"),
   price: integer("price").default(0),
   isManager: boolean("is_manager").default(false),
