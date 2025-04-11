@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, json, timestamp, pgEnum,bigint } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, json, timestamp, pgEnum,bigint,varchar,bytea } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import 'dotenv/config';
