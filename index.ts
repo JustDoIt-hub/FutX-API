@@ -1,6 +1,13 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import path from "path";
+import cors from "cors";
+
+// allow requests from your Netlify frontend
+app.use(cors({
+  origin: "https://fut-x.netlify.app",
+  credentials: true, // if you're using cookies/auth
+}));
 
 const app = express();
 app.use(express.json());
