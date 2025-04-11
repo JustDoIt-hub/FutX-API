@@ -1,15 +1,16 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
-import path from "path";
 import cors from "cors";
-
-// allow requests from your Netlify frontend
-app.use(cors({
-  origin: "https://fut-x.netlify.app",
-  credentials: true, // if you're using cookies/auth
-}));
+import { registerRoutes } from "./routes";
+import { log } from "./vite"; // Keep only log if you still use it
 
 const app = express();
+
+// Enable CORS for your frontend (adjust origin as needed)
+app.use(cors({
+  origin: "https://fut-x.netlify.app", // or use "*" during testing
+  credentials: true,
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -49,27 +50,16 @@ app.use((req, res, next) => {
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
-
     res.status(status).json({ message });
     throw err;
   });
 
-  // Import serveStatic here for production
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    // Fallback static file handler
-    const serveStatic = require("serve-static");
-    const distPath = path.join(__dirname, "dist", "client");
-    app.use(serveStatic(distPath));
-  }
-
-  const port = 5000;
+  const port = process.env.PORT || 5000;
   server.listen({
-    port,
+    port: +port,
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    console.log(`serving on port ${port}`);
+    log(`API server running on port ${port}`);
   });
 })();
