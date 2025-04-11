@@ -1,16 +1,17 @@
 {
     "name": "futdraft-backend",
     "version": "1.0.0",
+    "type": "module",
     "main": "dist/index.js",
     "scripts": {
-  "dev": "tsx index.ts",
-  "build": "npx esbuild index.ts --platform=node --bundle --format=cjs --outdir=dist",
-  "start": "NODE_ENV=production node dist/index.js"
-}
-,
+        "dev": "tsx server/index.ts",
+        "build": "esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+        "start": "NODE_ENV=production node dist/index.js"
+    },
     "dependencies": {
         "@neondatabase/serverless": "^0.10.4",
         "connect-pg-simple": "^10.0.0",
+        "cors": "^2.8.5",
         "dotenv": "^16.4.7",
         "drizzle-orm": "^0.41.0",
         "drizzle-zod": "^0.7.1",
