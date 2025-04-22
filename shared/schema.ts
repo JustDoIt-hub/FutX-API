@@ -109,12 +109,16 @@
 // export type SpinHistory = typeof spinHistory.$inferSelect;
 // export type InsertSpinHistory = z.infer<typeof insertSpinHistorySchema>;
 
-
-import { pgTable, text, serial, integer, boolean, json, timestamp, pgEnum, bigint, varchar, foreignKey } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, json, timestamp, pgEnum, bigint, varchar, foreignKey, primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { relations } from "drizzle-orm";
 import { z } from "zod";
 import 'dotenv/config';
+
+// Available player positions
+export const positionEnum = pgEnum("position", [
+  "GK", "CB", "LB", "RB", "CDM", "CM", "CAM", "LW", "RW", "ST"
+]);
 
 // Enum for user status
 export const statusEnum = pgEnum("status", ["active", "inactive", "banned"]);
@@ -163,7 +167,6 @@ export const players = pgTable("players", {
   position: positionEnum.notNull(), // Correct usage of the enum here
 });
 
-
 // Spin History table
 export const spinHistory = pgTable("spin_history", {
   id: serial("id").primaryKey(),
@@ -176,11 +179,6 @@ export const spinHistory = pgTable("spin_history", {
     fk_player: foreignKey(table.playerId).references(players.playerId),
   };
 });
-
-// Available player positions
-export const positionEnum = pgEnum("position", [
-  "GK", "CB", "LB", "RB", "CDM", "CM", "CAM", "LW", "RW", "ST"
-]);
 
 // Available events for players
 export const eventEnum = pgEnum("event", [
@@ -261,5 +259,3 @@ export type CreateTeam = z.infer<typeof createTeamSchema>;
 export type StartMatch = z.infer<typeof startMatchSchema>;
 export type CreateTournament = z.infer<typeof createTournamentSchema>;
 export type JoinTournament = z.infer<typeof joinTournamentSchema>;
-
-
