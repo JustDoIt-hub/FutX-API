@@ -101,7 +101,9 @@ export const spinRequestSchema = z.object({
 
 export type Player = typeof players.$inferSelect;
 
-export type UserPlayer = typeof userPlayers.$inferSelect;
+// export type UserPlayer = typeof userPlayers.$inferSelect;
+export type UserPlayer = typeof users.$inferSelect;
+
 export type InsertUserPlayer = z.infer<typeof insertUserPlayerSchema>;
 
 export type SpinHistory = typeof spinHistory.$inferSelect;
