@@ -217,6 +217,37 @@ export const spinRequestSchema = z.object({
   type: z.enum(["position", "event", "ovr", "all"]),
 });
 
+// ** NEW SCHEMAS **
+
+// Create Team Schema
+export const createTeamSchema = z.object({
+  teamName: z.string().min(3, "Team name should be at least 3 characters long"),
+  managerId: z.number().int().positive("Manager ID must be a positive integer"),
+  players: z.array(z.number().int().positive("Player ID must be a positive integer")),
+});
+
+// Start Match Schema
+export const startMatchSchema = z.object({
+  teamAId: z.number().int().positive("Team A ID must be a positive integer"),
+  teamBId: z.number().int().positive("Team B ID must be a positive integer"),
+  matchDate: z.date(),
+  location: z.string().min(3, "Location should be at least 3 characters long"),
+});
+
+// Create Tournament Schema
+export const createTournamentSchema = z.object({
+  tournamentName: z.string().min(3, "Tournament name should be at least 3 characters long"),
+  startDate: z.date(),
+  endDate: z.date(),
+  teams: z.array(z.number().int().positive("Team ID must be a positive integer")),
+});
+
+// Join Tournament Schema
+export const joinTournamentSchema = z.object({
+  userId: z.number().int().positive("User ID must be a positive integer"),
+  tournamentId: z.number().int().positive("Tournament ID must be a positive integer"),
+});
+
 // Exported Types
 export type Player = typeof players.$inferSelect;
 export type UserPlayer = typeof users.$inferSelect;
@@ -224,5 +255,10 @@ export type SpinHistory = typeof spinHistory.$inferSelect;
 export type InsertSpinHistory = z.infer<typeof insertSpinHistorySchema>;
 export type InsertUserPlayer = z.infer<typeof insertSpinUserSchema>;
 
+// Export types for new schemas
+export type CreateTeam = z.infer<typeof createTeamSchema>;
+export type StartMatch = z.infer<typeof startMatchSchema>;
+export type CreateTournament = z.infer<typeof createTournamentSchema>;
+export type JoinTournament = z.infer<typeof joinTournamentSchema>;
 
 
