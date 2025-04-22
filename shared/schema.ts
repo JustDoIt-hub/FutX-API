@@ -164,7 +164,7 @@ export const players = pgTable("players", {
   price: integer("price").default(0),
   isManager: boolean("is_manager").default(false),
   isGk: boolean("is_gk").default(false),
-  position: positionEnum.notNull(), // Correct usage of the enum here
+  position: positionEnum("position").notNull(), // Apply notNull on the column here
 });
 
 // Spin History table
