@@ -160,8 +160,9 @@ export const players = pgTable("players", {
   price: integer("price").default(0),
   isManager: boolean("is_manager").default(false),
   isGk: boolean("is_gk").default(false),
-  position: positionEnum("position").notNull(),
+  position: positionEnum.notNull(), // Correct usage of the enum here
 });
+
 
 // Spin History table
 export const spinHistory = pgTable("spin_history", {
