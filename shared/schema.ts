@@ -167,18 +167,26 @@ export const players = pgTable("players", {
   position: positionEnum("position").notNull(), // Apply notNull on the column here
 });
 
-// Spin History table
+// Spin History table (updated)
 export const spinHistory = pgTable("spin_history", {
   id: serial("id").primaryKey(),
   userId: bigint("user_id", { mode: "number" }).notNull(),
   playerId: integer("player_id").notNull(),
   spunAt: timestamp("spun_at").defaultNow(),
-}, (table) => {
-  return {
-    fk_user: foreignKey(table.userId).references(users.userId),
-    fk_player: foreignKey(table.playerId).references(players.playerId),
-  };
 });
+
+// New: SpinHistory Relations
+export const spinHistoryRelations = relations(spinHistory, ({ one }) => ({
+  user: one(users, {
+    fields: [spinHistory.userId],
+    references: [users.userId],
+  }),
+  player: one(players, {
+    fields: [spinHistory.playerId],
+    references: [players.playerId],
+  }),
+}));
+
 
 // Available events for players
 export const eventEnum = pgEnum("event", [
