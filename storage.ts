@@ -141,7 +141,7 @@ import {
 } from "@shared/schema";
 
 import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -152,12 +152,12 @@ export interface IStorage {
   getPlayer(id: number): Promise<Player | undefined>;
   getPlayersByIds(ids: number[]): Promise<Player[]>;
   getPlayersByPosition(position: string): Promise<Player[]>;
-  getRandomPlayerByFilters(position: string, category: string): Promise<Player | undefined>;
+  getRandomPlayerByFilters(position: string, event: string): Promise<Player | undefined>;
 
   getUserPlayers(userId: number): Promise<Player[]>;
   addPlayerToUser(userId: number, playerId: number): Promise<UserPlayer>;
 
-  getSpinHistory(userId: number, limit?: number): Promise<SpinHistory[]>; 
+  getSpinHistory(userId: number, limit?: number): Promise<SpinHistory[]>;
   createSpinHistory(history: InsertSpinHistory): Promise<SpinHistory>;
 }
 
@@ -191,49 +191,64 @@ export class DatabaseStorage implements IStorage {
 
   async getPlayersByIds(ids: number[]): Promise<Player[]> {
     if (ids.length === 0) return [];
-    return await db.select().from(players).where(eq(players.id, ids));
+    return await db.select().from(players).where(sql`${players.id} = ANY(${sql.array(ids, "int4")})`);
   }
 
   async getPlayersByPosition(position: string): Promise<Player[]> {
     return await db.select().from(players).where(eq(players.position, position));
   }
 
-  async getRandomPlayerByFilters(position: string, category: string): Promise<Player | undefined> {
+  async getRandomPlayerByFilters(position: string, event: string): Promise<Player | undefined> {
     const [player] = await db
       .select()
       .from(players)
       .where(and(
-        eq(players.position, position),        // Position filter
-        eq(players.category, category)          // Category (event) filter
+        eq(players.position, position),
+        eq(players.event, event) // FIX: `event` not `category`
       ))
-      .orderBy(desc(players.id))               // Random ordering using id (use `RANDOM()` if needed by your db)
-      .limit(1);                               // Limit to 1 random player
+      .orderBy(sql`RANDOM()`) // Real random selection
+      .limit(1);
 
     return player;
   }
 
   // --- User-Player Collection ---
   async getUserPlayers(userId: number): Promise<Player[]> {
-    const userPlayerRecords = await db
-      .select()
+    const result = await db
+      .select({
+        id: players.id,
+        name: players.name,
+        position: players.position,
+        event: players.event,
+        rating: players.rating,
+        imageUrl: players.image_url,
+      })
       .from(userPlayers)
       .innerJoin(players, eq(userPlayers.player_id, players.id))
       .where(eq(userPlayers.user_id, userId));
 
-    return userPlayerRecords.map(record => record.players);
+    return result;
   }
 
   async addPlayerToUser(userId: number, playerId: number): Promise<UserPlayer> {
     const existing = await db
       .select()
       .from(userPlayers)
-      .where(and(eq(userPlayers.user_id, userId), eq(userPlayers.player_id, playerId)));
+      .where(and(
+        eq(userPlayers.user_id, userId),
+        eq(userPlayers.player_id, playerId)
+      ));
 
     if (existing.length > 0) {
       const [updated] = await db
         .update(userPlayers)
-        .set({ quantity: sqlQuery`${userPlayers.quantity} + 1` })
-        .where(and(eq(userPlayers.user_id, userId), eq(userPlayers.player_id, playerId)))
+        .set({
+          quantity: sql`${userPlayers.quantity} + 1`
+        })
+        .where(and(
+          eq(userPlayers.user_id, userId),
+          eq(userPlayers.player_id, playerId)
+        ))
         .returning();
       return updated;
     } else {
@@ -268,4 +283,3 @@ export class DatabaseStorage implements IStorage {
 }
 
 export const storage = new DatabaseStorage();
-
