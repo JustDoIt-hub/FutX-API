@@ -4,7 +4,8 @@ import { telegramAuthSchema } from '@shared/schema';
 import { ZodError } from 'zod';
 import { fromZodError } from 'zod-validation-error';
 import 'express-session';
-import { log } from '../utils/logger'; // Assuming you have a log function
+const log = (...args: any[]) => console.log("[LOG]", ...args);
+
 
 // Extend session to include userId
 declare module 'express-session' {
