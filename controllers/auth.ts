@@ -56,16 +56,15 @@ export async function login(req: Request, res: Response) {
     // Check if user already exists
     let user = await storage.getUserByTelegramId(payload.id);
 
-    if (user) {
-      log(`Found existing user with Telegram ID ${payload.id}`, 'auth');
-    } else {
+    if (!user) {
       log(`No user found with Telegram ID ${payload.id}, creating one`, 'auth');
-
       user = await storage.createUser({
         telegramId: payload.id,
         telegramUsername: payload.username,
         coins: 5000, // Starting coins
       });
+    } else {
+      log(`Found existing user with Telegram ID ${payload.id}`, 'auth');
     }
 
     // Store in session
@@ -111,7 +110,7 @@ export async function logout(req: Request, res: Response) {
       console.error("Failed to destroy session:", err);
       return res.status(500).json({ message: "Logout failed" });
     }
-    res.clearCookie("connect.sid"); // Optional: clear session cookie
+    res.clearCookie("connect.sid");
     return res.json({ message: "Logged out" });
   });
 }
