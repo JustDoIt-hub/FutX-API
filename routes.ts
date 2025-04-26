@@ -48,11 +48,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ✅ Register HTTP routes INSIDE the function, after `app` exists.
 
-  // Auth
-  app.post('/api/auth/login', login);
-  app.get('/api/auth/me', getCurrentUser);
-  app.post('/api/auth/logout', logout);
-  app.post('/api/auth/telegram', telegramLogin); // ✅
+// Auth routes
+app.post('/api/auth/login', login);
+app.get('/api/auth/me', getCurrentUser);
+app.post('/api/auth/logout', logout);
 
   // Spin
   app.get('/api/spin/options', getSpinOptions);
