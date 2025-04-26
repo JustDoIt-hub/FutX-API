@@ -4,6 +4,8 @@ import { storage } from "./storage";
 import session from "express-session";
 import memorystore from "memorystore";
 import { WebSocketServer, WebSocket } from "ws";
+import { login, getCurrentUser, logout, telegramLogin } from "./controllers/auth";
+
 
 // Import controllers
 import { login, getCurrentUser, logout } from "./controllers/auth";
@@ -19,6 +21,13 @@ import {
   startTournament,
   recordTournamentMatchResult
 } from "./controllers/tournament";
+
+// Auth
+app.post('/api/auth/login', login);
+app.get('/api/auth/me', getCurrentUser);
+app.post('/api/auth/logout', logout);
+app.post('/api/auth/telegram', telegramLogin); // 
+
 
 // ✅ Add a simple logger function
 function log(message: string, tag: string = 'log') {
