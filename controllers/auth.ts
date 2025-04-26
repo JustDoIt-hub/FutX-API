@@ -3,7 +3,7 @@ import { storage } from '../storage';
 import { telegramAuthSchema } from '@shared/schema';
 import { ZodError } from 'zod';
 import { fromZodError } from 'zod-validation-error';
-import { createHmac } from 'crypto'; // ✅ Add this
+import { createHmac } from 'crypto';
 import 'express-session';
 
 const log = (...args: any[]) => console.log("[LOG]", ...args);
@@ -15,34 +15,38 @@ declare module 'express-session' {
   }
 }
 
-// 🔥 Load Telegram Bot Token
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 
-export async function telegramLogin(req: Request, res: Response) {
+/** Verify Telegram login payload */
+function verifyTelegramHash(payload: Record<string, any>) {
+  const { hash, ...authData } = payload;
+
+  const secretKey = createHmac('sha256', TELEGRAM_BOT_TOKEN)
+    .update('WebAppData')
+    .digest();
+
+  const dataCheckString = Object.entries(authData)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, value]) => `${key}=${value}`)
+    .join('\n');
+
+  const hmac = createHmac('sha256', secretKey)
+    .update(dataCheckString)
+    .digest('hex');
+
+  return hmac === hash;
+}
+
+/** Login function (Telegram) */
+export async function login(req: Request, res: Response) {
   try {
     log('Telegram login attempt', 'auth');
 
-    // Validate Telegram payload
     const payload = telegramAuthSchema.parse(req.body);
     log(`Telegram payload validated: ${JSON.stringify(payload)}`, 'auth');
 
-    // 🔥 Verify Telegram hash
-    const { hash, ...authData } = payload;
-
-    const secretKey = createHmac('sha256', TELEGRAM_BOT_TOKEN)
-      .update('WebAppData')
-      .digest();
-
-    const dataCheckString = Object.entries(authData)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([key, value]) => `${key}=${value}`)
-      .join('\n');
-
-    const hmac = createHmac('sha256', secretKey)
-      .update(dataCheckString)
-      .digest('hex');
-
-    if (hmac !== hash) {
+    // ✅ Hash verification
+    if (!verifyTelegramHash(payload)) {
       log('Hash mismatch detected', 'auth');
       return res.status(403).json({ message: 'Invalid Telegram login: hash mismatch' });
     }
@@ -57,7 +61,6 @@ export async function telegramLogin(req: Request, res: Response) {
     } else {
       log(`No user found with Telegram ID ${payload.id}, creating one`, 'auth');
 
-      const username = payload.username || `tg_user_${payload.id}`;
       user = await storage.createUser({
         telegramId: payload.id,
         telegramUsername: payload.username,
@@ -71,7 +74,6 @@ export async function telegramLogin(req: Request, res: Response) {
       log(`Stored user ID ${user.id} in session`, 'auth');
     }
 
-    // Return user info
     const { password, ...userInfo } = user;
     return res.status(200).json({ message: 'Telegram login successful', user: userInfo });
 
@@ -87,3 +89,29 @@ export async function telegramLogin(req: Request, res: Response) {
   }
 }
 
+/** Get current logged-in user */
+export async function getCurrentUser(req: Request, res: Response) {
+  if (!req.session?.userId) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+
+  const user = await storage.getUserById(req.session.userId);
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  const { password, ...userInfo } = user;
+  return res.json({ user: userInfo });
+}
+
+/** Logout user */
+export async function logout(req: Request, res: Response) {
+  req.session?.destroy((err) => {
+    if (err) {
+      console.error("Failed to destroy session:", err);
+      return res.status(500).json({ message: "Logout failed" });
+    }
+    res.clearCookie("connect.sid"); // Optional: clear session cookie
+    return res.json({ message: "Logged out" });
+  });
+}
