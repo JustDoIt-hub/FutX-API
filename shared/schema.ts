@@ -237,3 +237,28 @@ export type UserPlayer = typeof userPlayers.$inferSelect;
 export type InsertUserPlayer = z.infer<typeof insertUserPlayerSchema>;
 export type SpinHistory = typeof spinHistory.$inferSelect;
 export type InsertSpinHistory = z.infer<typeof insertSpinHistorySchema>;
+// --- Additional Zod Schemas ---
+
+export const spinRequestSchema = z.object({
+  type: z.enum(['position', 'event', 'ovr', 'all']),
+});
+
+export const createTeamSchema = z.object({
+  teamName: z.string().min(1, 'Team name cannot be empty'),
+  players: z.array(z.number()).min(1, 'At least one player must be selected'),
+});
+
+export const startMatchSchema = z.object({
+  teamId: z.number(),
+  opponentId: z.number(),
+});
+
+export const createTournamentSchema = z.object({
+  name: z.string().min(1, 'Tournament name cannot be empty'),
+  maxPlayers: z.number().min(2, 'Tournament must allow at least 2 players'),
+});
+
+export const joinTournamentSchema = z.object({
+  tournamentId: z.number(),
+});
+
