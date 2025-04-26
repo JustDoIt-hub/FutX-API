@@ -7,7 +7,7 @@ import memorystore from "memorystore";
 import { WebSocketServer, WebSocket } from "ws";
 
 // Import controllers (✅ one time only)
-import { login, getCurrentUser, logout, telegramLogin } from "./controllers/auth";
+import { login, getCurrentUser, logout } from "./controllers/auth";
 import { getSpinOptions, performSpin, getRecentSpins, getUserPlayers } from "./controllers/spin";
 import { getUserTeams, createTeam, getTeamDetails, updateTeam, deleteTeam } from "./controllers/team";
 import { startMatch, getMatchHistory, getMatchDetails, handleMatchSimulation } from "./controllers/match";
