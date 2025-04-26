@@ -109,52 +109,47 @@
 // export type SpinHistory = typeof spinHistory.$inferSelect;
 // export type InsertSpinHistory = z.infer<typeof insertSpinHistorySchema>;
 
-import { pgTable, text, serial, integer, boolean, json, timestamp, pgEnum, bigint, varchar, foreignKey, primaryKey } from "drizzle-orm/pg-core";
+import {
+  pgTable, text, serial, integer, boolean, timestamp, varchar,
+  primaryKey, pgEnum, bigint
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { relations } from "drizzle-orm";
 import { z } from "zod";
-import 'dotenv/config';
 
-// Available player positions
+// Enums
 export const positionEnum = pgEnum("position", [
   "GK", "CB", "LB", "RB", "CDM", "CM", "CAM", "LW", "RW", "ST"
 ]);
 
-// Enum for user status
-export const statusEnum = pgEnum("status", ["active", "inactive", "banned"]);
+export const eventEnum = pgEnum("event", [
+  "ICY_MAGICIANS", "FUTURE_STARS", "ICON", "GOLD"
+]);
 
-// User table with all information of collection of that user
-export const users = pgTable(
-  "users",
-  {
-    userId: bigint("user_id", { mode: "number" }).notNull(),
-    playerId: integer("player_id").notNull(),
-    quantity: integer("quantity").notNull().default(1),
-    favFileId: varchar("fav_file_id", { length: 10000 }),
-    lastClaimed: timestamp("last_claimed", { withTimezone: false }),
-    forceSub: boolean("force_sub").default(false),
-    chosenTitle: varchar("chosen_title", { length: 255 }),
-    status: statusEnum("status").default("active"),
-    rank: varchar("rank", { length: 2 }),
-    favMediaType: varchar("fav_media_type", { length: 10 }),
-    tradable: boolean("tradable").default(true),
-    howgot: varchar("howgot", { length: 20 }),
-  },
-  (table) => {
-    return {
-      pk: primaryKey({ columns: [table.userId, table.playerId] }),
-    };
-  }
-);
+export const statusEnum = pgEnum("status", [
+  "active", "inactive", "banned"
+]);
 
-export const userPlayers = users;
+// Users table (REAL)
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  telegramId: varchar("telegram_id", { length: 255 }).notNull(),
+  favFileId: varchar("fav_file_id", { length: 10000 }),
+  favMediaType: varchar("fav_media_type", { length: 10 }),
+  chosenTitle: varchar("chosen_title", { length: 255 }),
+  forceSub: boolean("force_sub").default(false),
+  lastClaimed: timestamp("last_claimed"),
+  status: statusEnum("status").default("active"),
+  rank: varchar("rank", { length: 2 }),
+});
 
 // Players table
 export const players = pgTable("players", {
-  playerId: serial("player_id").primaryKey(),
+  id: serial("id").primaryKey(),
   name: varchar("name", { length: 100 }).notNull(),
-  category: varchar("category", { length: 100 }).notNull(),
+  event: eventEnum("event").notNull(),
   rarity: varchar("rarity", { length: 100 }).notNull(),
+  position: positionEnum("position").notNull(),
   fileId: varchar("file_id", { length: 5000 }),
   attack: integer("attack").default(0),
   defense: integer("defense").default(0),
@@ -164,10 +159,20 @@ export const players = pgTable("players", {
   price: integer("price").default(0),
   isManager: boolean("is_manager").default(false),
   isGk: boolean("is_gk").default(false),
-  position: positionEnum("position").notNull(), // Apply notNull on the column here
 });
 
-// Spin History table (updated)
+// UserPlayers collection table
+export const userPlayers = pgTable("user_players", {
+  userId: bigint("user_id", { mode: "number" }).notNull(),
+  playerId: integer("player_id").notNull(),
+  quantity: integer("quantity").notNull().default(1),
+  tradable: boolean("tradable").default(true),
+  howgot: varchar("howgot", { length: 20 }),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.userId, table.playerId] }),
+}));
+
+// Spin History
 export const spinHistory = pgTable("spin_history", {
   id: serial("id").primaryKey(),
   userId: bigint("user_id", { mode: "number" }).notNull(),
@@ -175,34 +180,37 @@ export const spinHistory = pgTable("spin_history", {
   spunAt: timestamp("spun_at").defaultNow(),
 });
 
-// New: SpinHistory Relations
-export const spinHistoryRelations = relations(spinHistory, ({ one }) => ({
-  user: one(users, {
-    fields: [spinHistory.userId],
-    references: [users.userId],
-  }),
-  player: one(players, {
-    fields: [spinHistory.playerId],
-    references: [players.playerId],
-  }),
-}));
-
-
-// Available events for players
-export const eventEnum = pgEnum("event", [
-  "ICY_MAGICIANS", "FUTURE_STARS", "ICON", "GOLD"
-]);
-
 // Relations
-export const usersRelations = relations(users, ({ one }) => ({
-  player: one(players, {
-    fields: [users.playerId],
-    references: [players.playerId],
-  }),
+export const usersRelations = relations(users, ({ many }) => ({
+  spins: many(spinHistory),
+  collection: many(userPlayers),
 }));
 
 export const playersRelations = relations(players, ({ many }) => ({
-  collectedBy: many(users),
+  collectedBy: many(userPlayers),
+  spunInHistory: many(spinHistory),
+}));
+
+export const userPlayersRelations = relations(userPlayers, ({ one }) => ({
+  user: one(users, {
+    fields: [userPlayers.userId],
+    references: [users.id],
+  }),
+  player: one(players, {
+    fields: [userPlayers.playerId],
+    references: [players.id],
+  }),
+}));
+
+export const spinHistoryRelations = relations(spinHistory, ({ one }) => ({
+  user: one(users, {
+    fields: [spinHistory.userId],
+    references: [users.id],
+  }),
+  player: one(players, {
+    fields: [spinHistory.playerId],
+    references: [players.id],
+  }),
 }));
 
 // Insert Schemas
@@ -211,7 +219,7 @@ export const insertSpinHistorySchema = createInsertSchema(spinHistory).pick({
   playerId: true,
 });
 
-export const insertSpinUserSchema = createInsertSchema(users).pick({
+export const insertUserPlayerSchema = createInsertSchema(userPlayers).pick({
   userId: true,
   playerId: true,
   quantity: true,
@@ -220,50 +228,12 @@ export const insertSpinUserSchema = createInsertSchema(users).pick({
   tradable: z.literal(false),
 });
 
-export const spinRequestSchema = z.object({
-  type: z.enum(["position", "event", "ovr", "all"]),
-});
-
-// ** NEW SCHEMAS **
-
-// Create Team Schema
-export const createTeamSchema = z.object({
-  teamName: z.string().min(3, "Team name should be at least 3 characters long"),
-  managerId: z.number().int().positive("Manager ID must be a positive integer"),
-  players: z.array(z.number().int().positive("Player ID must be a positive integer")),
-});
-
-// Start Match Schema
-export const startMatchSchema = z.object({
-  teamAId: z.number().int().positive("Team A ID must be a positive integer"),
-  teamBId: z.number().int().positive("Team B ID must be a positive integer"),
-  matchDate: z.date(),
-  location: z.string().min(3, "Location should be at least 3 characters long"),
-});
-
-// Create Tournament Schema
-export const createTournamentSchema = z.object({
-  tournamentName: z.string().min(3, "Tournament name should be at least 3 characters long"),
-  startDate: z.date(),
-  endDate: z.date(),
-  teams: z.array(z.number().int().positive("Team ID must be a positive integer")),
-});
-
-// Join Tournament Schema
-export const joinTournamentSchema = z.object({
-  userId: z.number().int().positive("User ID must be a positive integer"),
-  tournamentId: z.number().int().positive("Tournament ID must be a positive integer"),
-});
-
 // Exported Types
+export type User = typeof users.$inferSelect;
+export type InsertUser = typeof users.$inferInsert;
 export type Player = typeof players.$inferSelect;
-export type UserPlayer = typeof users.$inferSelect;
+export type InsertPlayer = typeof players.$inferInsert;
+export type UserPlayer = typeof userPlayers.$inferSelect;
+export type InsertUserPlayer = z.infer<typeof insertUserPlayerSchema>;
 export type SpinHistory = typeof spinHistory.$inferSelect;
 export type InsertSpinHistory = z.infer<typeof insertSpinHistorySchema>;
-export type InsertUserPlayer = z.infer<typeof insertSpinUserSchema>;
-
-// Export types for new schemas
-export type CreateTeam = z.infer<typeof createTeamSchema>;
-export type StartMatch = z.infer<typeof startMatchSchema>;
-export type CreateTournament = z.infer<typeof createTournamentSchema>;
-export type JoinTournament = z.infer<typeof joinTournamentSchema>;
