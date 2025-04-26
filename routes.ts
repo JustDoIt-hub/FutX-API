@@ -4,7 +4,8 @@ import { storage } from "./storage";
 import session from "express-session";
 import memorystore from "memorystore";
 import { WebSocketServer, WebSocket } from "ws";
-import { login, getCurrentUser, logout, telegramLogin } from "./controllers/auth";
+import { login, getCurrentUser, logout } from "./controllers/auth";
+
 
 
 // Import controllers
