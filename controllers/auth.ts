@@ -44,15 +44,21 @@ function verifyTelegramHash(payload: Record<string, any>) {
 export async function login(req: Request, res: Response) {
   try {
     log('Telegram login attempt', 'auth');
+    log('Received payload:', req.body);
 
-    // ✅ USE req.query INSTEAD OF req.body
-    log('Received payload:', req.query);
+    const rawPayload = req.body;
 
-    const payload = telegramAuthSchema.parse(req.query);
-    log(`Telegram payload validated: ${JSON.stringify(payload)}`, 'auth');
+    const payload = {
+      ...rawPayload,
+      id: typeof rawPayload.id === 'string' ? Number(rawPayload.id) : rawPayload.id,
+      auth_date: typeof rawPayload.auth_date === 'string' ? Number(rawPayload.auth_date) : rawPayload.auth_date,
+    };
+
+    const parsedPayload = telegramAuthSchema.parse(payload);
+    log(`Telegram payload validated: ${JSON.stringify(parsedPayload)}`, 'auth');
 
     // ✅ Hash verification
-    if (!verifyTelegramHash(payload)) {
+    if (!verifyTelegramHash(payload)) {  // Use `payload` for hash checking
       log('Hash mismatch detected', 'auth');
       return res.status(403).json({ message: 'Invalid Telegram login: hash mismatch' });
     }
@@ -60,17 +66,17 @@ export async function login(req: Request, res: Response) {
     log('Telegram hash verified successfully', 'auth');
 
     // Check if user already exists
-    let user = await storage.getUserByTelegramId(payload.id);
+    let user = await storage.getUserByTelegramId(parsedPayload.id);
 
     if (!user) {
-      log(`No user found with Telegram ID ${payload.id}, creating one`, 'auth');
+      log(`No user found with Telegram ID ${parsedPayload.id}, creating one`, 'auth');
       user = await storage.createUser({
-        telegramId: payload.id,
-        telegramUsername: payload.username,
+        telegramId: parsedPayload.id,
+        telegramUsername: parsedPayload.username,
         coins: 5000,
       });
     } else {
-      log(`Found existing user with Telegram ID ${payload.id}`, 'auth');
+      log(`Found existing user with Telegram ID ${parsedPayload.id}`, 'auth');
     }
 
     if (req.session) {
@@ -91,20 +97,6 @@ export async function login(req: Request, res: Response) {
     log(`Telegram login error: ${error instanceof Error ? error.message : String(error)}`, 'auth');
     return res.status(500).json({ message: 'Telegram login failed' });
   }
-}
-
-export async function getCurrentUser(req: Request, res: Response) {
-  if (!req.session?.userId) {
-    return res.status(401).json({ message: "Not authenticated" });
-  }
-
-  const user = await storage.getUserById(req.session.userId);
-  if (!user) {
-    return res.status(404).json({ message: "User not found" });
-  }
-
-  const { password, ...userInfo } = user;
-  return res.json({ user: userInfo });
 }
 
 export async function logout(req: Request, res: Response) {
