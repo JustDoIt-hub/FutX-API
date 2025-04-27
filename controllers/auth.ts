@@ -186,11 +186,12 @@ export async function login(req: Request, res: Response) {
 
     if (!user) {
       log(`No user found with Telegram ID ${payload.id}, creating one`, 'auth');
-      user = await storage.createUser({
-        telegramId: payload.id,
-        telegramUsername: payload.username,
-        coins: 5000,
-      });
+     user = await storage.createUser({
+  telegram_id: payload.id,            // use snake_case
+  telegram_username: payload.username,
+  coins: 5000,
+});
+
     } else {
       log(`Found existing user with Telegram ID ${payload.id}`, 'auth');
     }
