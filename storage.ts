@@ -162,8 +162,13 @@ export class DatabaseStorage {
   }
 
   async createUser(data: InsertUser) {
-    return (await db.insert(users).values(data).returning())[0];
-  }
+  return (await db.insert(users).values({
+    telegram_id: data.telegramId,          // map camelCase to snake_case
+    telegram_username: data.telegramUsername,
+    coins: data.coins,
+  }).returning())[0];
+}
+
 
   async updateUser(id: number, data: Partial<User>) {
     return (await db.update(users).set(data).where(eq(users.id, id)).returning())[0];
