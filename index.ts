@@ -65,3 +65,6 @@ app.use((req, res, next) => {
     log(`API server running on port ${port}`);
   });
 })();
+app.get("/", (req, res) => {
+  res.send("Server is running");
+});
