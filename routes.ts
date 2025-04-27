@@ -48,7 +48,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ✅ Register HTTP routes INSIDE the function, after `app` exists.
 
-  app.get('/api/auth/login', (req: Request, res: Response) => {
+  app.get('/api/auth/telegram', (req: Request, res: Response) => {
     const { id, first_name, username } = req.query;
 
     if (!id || !username) {
@@ -59,7 +59,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.send({ message: `Welcome ${first_name} (@${username})!` });
   });
 
-  app.post('/api/auth/login', login);
+  app.post('/api/auth/telegram', login);
   app.get('/api/auth/me', getCurrentUser);
   app.post('/api/auth/logout', logout);
 
