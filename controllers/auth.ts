@@ -144,9 +144,10 @@ function verifyTelegramHash(payload: Record<string, any>) {
     .update('WebAppData')
     .digest();
 
-  const dataCheckString = Object.entries(authData)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([key, value]) => `${key}=${value}`)
+  // ⚡ Create correct data check string
+  const dataCheckString = Object.keys(authData)
+    .sort()
+    .map(key => `${key}=${authData[key]}`)
     .join('\n');
 
   log('Data check string:', dataCheckString);
@@ -156,9 +157,14 @@ function verifyTelegramHash(payload: Record<string, any>) {
     .digest('hex');
 
   log('Generated HMAC:', hmac);
+  log('Received HASH:', hash);
 
-  return hmac === hash;
+  const result = hmac === hash;
+  log('Hash verification result:', result);
+
+  return result;
 }
+
 
 export async function login(req: Request, res: Response) {
   try {
