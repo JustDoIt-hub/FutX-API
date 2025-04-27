@@ -11,7 +11,6 @@ app.get("/", (req: Request, res: Response) => {
   res.send("FutX API is up and running!");
 });
 
-
 // Enable CORS for your frontend (adjust origin as needed)
 app.use(cors({
   origin: "https://fut-x.netlify.app", // Or use "*" for testing
