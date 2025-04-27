@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import { Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import session from "express-session";
@@ -46,7 +47,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(sessionMiddleware);
 
   // ✅ Register HTTP routes INSIDE the function, after `app` exists.
-  
+
+  app.get('/api/auth/telegram', (req: Request, res: Response) => {
+    const { id, first_name, username } = req.query;
+
+    if (!id || !username) {
+      return res.status(400).send({ error: "Missing id or username" });
+    }
+
+    console.log(`Telegram login attempt from ${first_name} (@${username}), ID: ${id}`);
+    return res.send({ message: `Welcome ${first_name} (@${username})!` });
+  });
 
   app.post('/api/auth/login', login);
   app.get('/api/auth/me', getCurrentUser);
