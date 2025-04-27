@@ -140,11 +140,10 @@ function verifyTelegramHash(payload: Record<string, any>) {
 
   log('Verifying hash for payload:', authData);
 
-  const secretKey = createHmac('sha256', TELEGRAM_BOT_TOKEN)
-    .update('WebAppData')
+  const secretKey = createHmac('sha256', 'WebAppData')
+    .update(TELEGRAM_BOT_TOKEN)
     .digest();
 
-  // ⚡ Create correct data check string
   const dataCheckString = Object.keys(authData)
     .sort()
     .map(key => `${key}=${authData[key]}`)
@@ -157,18 +156,11 @@ function verifyTelegramHash(payload: Record<string, any>) {
     .digest('hex');
 
   log('Generated HMAC:', hmac);
-  log('Received HASH:', hash);
+  log('Incoming Hash:', hash);
 
-  const result = hmac === hash;
-  log('Hash verification result:', result);
-  log("Payload for hash verification:", authData);
-log("dataCheckString:", dataCheckString);
-log("Generated HMAC:", hmac);
-log("Incoming Hash:", hash);
-
-
-  return result;
+  return hmac === hash;
 }
+
 
 
 export async function login(req: Request, res: Response) {
