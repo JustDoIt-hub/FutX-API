@@ -182,7 +182,8 @@ export async function login(req: Request, res: Response) {
     log(`Telegram payload validated: ${JSON.stringify(payload)}`, 'auth');
 
     // 🔍 Check if user already exists
-    let user = await storage.getUserByTelegramId(payload.id);
+   let user = await storage.getUserByTelegramId(String(payload.id));
+
 
     if (!user) {
       log(`No user found with Telegram ID ${payload.id}, creating one`, 'auth');
