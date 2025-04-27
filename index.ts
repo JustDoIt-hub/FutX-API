@@ -7,6 +7,11 @@ const log = (...args: any[]) => console.log("[LOG]", ...args);
 
 const app = express();
 
+app.get("/", (req: Request, res: Response) => {
+  res.send("FutX API is up and running!");
+});
+
+
 // Enable CORS for your frontend (adjust origin as needed)
 app.use(cors({
   origin: "https://fut-x.netlify.app", // Or use "*" for testing
@@ -65,6 +70,3 @@ app.use((req, res, next) => {
     log(`API server running on port ${port}`);
   });
 })();
-app.get("/", (req, res) => {
-  res.send("Server is running");
-});
