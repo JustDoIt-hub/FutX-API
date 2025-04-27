@@ -22,9 +22,17 @@ export class DatabaseStorage {
     return (await db.select().from(users).where(eq(users.id, id)))[0];
   }
 
-  async getUserByTelegramId(telegramId: string | number) {
-  return (await db.select().from(users).where(eq(users.telegram_id, String(telegramId))))[0];
+ async getUserByTelegramId(telegramId: string) {
+  try {
+    const result = await db.select().from(users).where(eq(users.telegram_id, telegramId));
+    return result[0];
+  } catch (error) {
+    console.error('❗️Error querying user by Telegram ID:', telegramId);
+    console.error(error);
+    throw error; // Rethrow to be caught in calling function
+  }
 }
+
 
 
   async createUser(data: InsertUser) {
