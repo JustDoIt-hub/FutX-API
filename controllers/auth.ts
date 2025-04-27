@@ -221,7 +221,7 @@ export async function getCurrentUser(req: Request, res: Response) {
     return res.status(401).json({ message: "Not authenticated" });
   }
 
-  const user = await storage.getUserById(req.session.userId);
+  const user = await storage.getUser(req.session.userId);
   if (!user) {
     return res.status(404).json({ message: "User not found" });
   }
