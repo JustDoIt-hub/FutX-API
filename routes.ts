@@ -47,19 +47,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(sessionMiddleware);
 
   // ✅ Register HTTP routes INSIDE the function, after `app` exists.
+  app.post('/api/auth/telegram', async (req: Request, res: Response) => {
+    try {
+      const telegramData = req.body;
 
-  app.get('/api/auth/telegram', (req: Request, res: Response) => {
-    const { id, first_name, username } = req.query;
+      const user = await authenticateWithTelegram(telegramData); // Add this function for your logic
 
-    if (!id || !username) {
-      return res.status(400).send({ error: "Missing id or username" });
+      if (user) {
+        req.session.user = user;  // Or return JWT
+        res.status(200).json({ message: "Authenticated successfully" });
+      } else {
+        res.status(400).json({ message: "Authentication failed" });
+      }
+    } catch (error) {
+      console.error("Telegram authentication error:", error);
+      res.status(500).json({ message: "Internal Server Error" });
     }
-
-    console.log(`Telegram login attempt from ${first_name} (@${username}), ID: ${id}`);
-    return res.send({ message: `Welcome ${first_name} (@${username})!` });
   });
-
-  app.post('/api/auth/telegram', login);
   app.get('/api/auth/me', getCurrentUser);
   app.post('/api/auth/logout', logout);
 
