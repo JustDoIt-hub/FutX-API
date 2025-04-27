@@ -45,6 +45,9 @@ export async function login(req: Request, res: Response) {
   try {
     log('Telegram login attempt', 'auth');
 
+    // Log the request body to see what data is being received
+    log('Received payload:', req.body);
+
     const payload = telegramAuthSchema.parse(req.body);
     log(`Telegram payload validated: ${JSON.stringify(payload)}`, 'auth');
 
