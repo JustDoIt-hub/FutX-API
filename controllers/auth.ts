@@ -125,6 +125,7 @@ import { fromZodError } from 'zod-validation-error';
 import { createHmac } from 'crypto';
 import 'express-session';
 
+
 const log = (...args: any[]) => console.log("[LOG]", ...args);
 
 declare module 'express-session' {
@@ -138,9 +139,8 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 function verifyTelegramHash(payload: Record<string, any>) {
   const { hash, ...authData } = payload;
 
-  log('Verifying hash for payload:', authData);
-
-  const secretKey = createHmac('sha256', Buffer.from(TELEGRAM_BOT_TOKEN, 'utf-8'))
+  const secretKey = createHash('sha256')
+    .update(TELEGRAM_BOT_TOKEN)
     .digest();
 
   const dataCheckString = Object.keys(authData)
@@ -148,18 +148,16 @@ function verifyTelegramHash(payload: Record<string, any>) {
     .map(key => `${key}=${authData[key]}`)
     .join('\n');
 
-  log('Data check string:', dataCheckString);
-
   const hmac = createHmac('sha256', secretKey)
     .update(dataCheckString)
     .digest('hex');
 
+  log('Data check string:', dataCheckString);
   log('Generated HMAC:', hmac);
   log('Incoming Hash:', hash);
 
   return hmac === hash;
 }
-
 
 export async function login(req: Request, res: Response) {
   try {
