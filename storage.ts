@@ -157,9 +157,9 @@ export class DatabaseStorage {
     return (await db.select().from(users).where(eq(users.id, id)))[0];
   }
 
-  async getUserByTelegramId(telegramId: string) {
-    return (await db.select().from(users).where(eq(users.telegram_id, telegramId)))[0];
-  }
+  async getUserByTelegramId(telegramId: number) {
+  return (await db.select().from(users).where(eq(users.telegram_id, String(telegramId))))[0];
+}
 
   async createUser(data: InsertUser) {
   return (await db.insert(users).values({
