@@ -45,10 +45,10 @@ export async function login(req: Request, res: Response) {
   try {
     log('Telegram login attempt', 'auth');
 
-    // Log the request body to see what data is being received
-    log('Received payload:', req.body);
+    // ✅ USE req.query INSTEAD OF req.body
+    log('Received payload:', req.query);
 
-    const payload = telegramAuthSchema.parse(req.body);
+    const payload = telegramAuthSchema.parse(req.query);
     log(`Telegram payload validated: ${JSON.stringify(payload)}`, 'auth');
 
     // ✅ Hash verification
@@ -67,13 +67,12 @@ export async function login(req: Request, res: Response) {
       user = await storage.createUser({
         telegramId: payload.id,
         telegramUsername: payload.username,
-        coins: 5000, // Starting coins
+        coins: 5000,
       });
     } else {
       log(`Found existing user with Telegram ID ${payload.id}`, 'auth');
     }
 
-    // Store in session
     if (req.session) {
       req.session.userId = user.id;
       log(`Stored user ID ${user.id} in session`, 'auth');
