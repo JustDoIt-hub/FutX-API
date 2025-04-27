@@ -161,6 +161,11 @@ function verifyTelegramHash(payload: Record<string, any>) {
 
   const result = hmac === hash;
   log('Hash verification result:', result);
+  log("Payload for hash verification:", authData);
+log("dataCheckString:", dataCheckString);
+log("Generated HMAC:", hmac);
+log("Incoming Hash:", hash);
+
 
   return result;
 }
