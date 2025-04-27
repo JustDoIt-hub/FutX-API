@@ -122,7 +122,7 @@ import { storage } from '../storage';
 import { telegramAuthSchema } from '@shared/schema';
 import { ZodError } from 'zod';
 import { fromZodError } from 'zod-validation-error';
-import { createHmac } from 'crypto';
+import { createHmac, createHash } from 'crypto';
 import 'express-session';
 
 
