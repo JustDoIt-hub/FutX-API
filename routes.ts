@@ -5,6 +5,10 @@ import { storage } from "./storage";
 import session from "express-session";
 import memorystore from "memorystore";
 import { WebSocketServer, WebSocket } from "ws";
+import { login } from './controllers/auth';
+
+app.post('/api/auth/telegram', login);
+
 
 // Import controllers (✅ one time only)
 import { login, getCurrentUser, logout } from "./controllers/auth";
