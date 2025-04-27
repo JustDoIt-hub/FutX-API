@@ -27,9 +27,11 @@ export class DatabaseStorage {
     return (await db.select().from(users).where(eq(users.telegram_id, telegramId)))[0];
   }
 
-  async createUser(data: { telegram_id: number; telegram_username: string; coins: number; }) {
-    return (await db.insert(users).values(data).returning())[0];
-  }
+ async createUser(data: { telegram_id: number; telegram_username: string; coins: number; }) {
+  console.log("[DEBUG] About to insert user with data:", data);  // 
+  return (await db.insert(users).values(data).returning())[0];
+}
+
 
   async updateUser(id: number, data: Partial<User>) {
     return (await db.update(users).set(data).where(eq(users.id, id)).returning())[0];
