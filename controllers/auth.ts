@@ -218,3 +218,29 @@ export async function login(req: Request, res: Response) {
     return res.status(500).json({ message: 'Telegram login failed' });
   }
 }
+
+export async function getCurrentUser(req: Request, res: Response) {
+  if (!req.session?.userId) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+
+  const user = await storage.getUserById(req.session.userId);
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  const { password, ...userInfo } = user;
+  return res.json({ user: userInfo });
+}
+
+export async function logout(req: Request, res: Response) {
+  req.session?.destroy((err) => {
+    if (err) {
+      console.error("Failed to destroy session:", err);
+      return res.status(500).json({ message: "Logout failed" });
+    }
+    res.clearCookie("connect.sid");
+    return res.json({ message: "Logged out" });
+  });
+}
+
