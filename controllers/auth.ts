@@ -140,8 +140,8 @@ function verifyTelegramHash(payload: Record<string, any>) {
 
   log('Verifying hash for payload:', authData);
 
-  const secretKey = createHmac('sha256', 'WebAppData')
-    .update(TELEGRAM_BOT_TOKEN)
+  const secretKey = createHmac('sha256', TELEGRAM_BOT_TOKEN)
+    .update('WebAppData')
     .digest();
 
   const dataCheckString = Object.keys(authData)
@@ -161,31 +161,27 @@ function verifyTelegramHash(payload: Record<string, any>) {
   return hmac === hash;
 }
 
-
-
 export async function login(req: Request, res: Response) {
   try {
     log('Telegram login attempt', 'auth');
-    log('Received payload:', req.query);
+    log('Received raw payload:', req.query);
 
-    // 🛠 Fix types before validation
-    if (typeof req.query.id === 'string') {
-      req.query.id = Number(req.query.id);
-    }
-    if (typeof req.query.auth_date === 'string') {
-      req.query.auth_date = Number(req.query.auth_date);
-    }
-
-    const payload = telegramAuthSchema.parse(req.query);
-    log(`Telegram payload validated: ${JSON.stringify(payload)}`, 'auth');
-
-    // ✅ Hash verification
-    if (!verifyTelegramHash(payload)) {
+    // ✅ Step 1: Verify hash FIRST (raw payload)
+    if (!verifyTelegramHash(req.query)) {
       log('Hash mismatch detected', 'auth');
       return res.status(403).json({ message: 'Invalid Telegram login: hash mismatch' });
     }
 
     log('Telegram hash verified successfully', 'auth');
+
+    // ✅ Step 2: After hash success, parse types
+    const payload = telegramAuthSchema.parse({
+      ...req.query,
+      id: Number(req.query.id),
+      auth_date: Number(req.query.auth_date),
+    });
+
+    log(`Telegram payload validated: ${JSON.stringify(payload)}`, 'auth');
 
     // 🔍 Check if user already exists
     let user = await storage.getUserByTelegramId(payload.id);
@@ -201,7 +197,6 @@ export async function login(req: Request, res: Response) {
       log(`Found existing user with Telegram ID ${payload.id}`, 'auth');
     }
 
-    // ✅ Save user ID in session
     if (req.session) {
       req.session.userId = user.id;
       log(`Stored user ID ${user.id} in session`, 'auth');
@@ -246,4 +241,3 @@ export async function logout(req: Request, res: Response) {
     return res.json({ message: "Logged out" });
   });
 }
-
