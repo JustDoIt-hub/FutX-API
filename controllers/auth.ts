@@ -8,7 +8,6 @@ import 'express-session';
 
 const log = (...args: any[]) => console.log("[LOG]", ...args);
 
-// Extend session to include userId
 declare module 'express-session' {
   interface SessionData {
     userId: number;
@@ -17,9 +16,10 @@ declare module 'express-session' {
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 
-/** Verify Telegram login payload */
 function verifyTelegramHash(payload: Record<string, any>) {
   const { hash, ...authData } = payload;
+
+  log('Verifying hash for payload:', authData);
 
   const secretKey = createHmac('sha256', TELEGRAM_BOT_TOKEN)
     .update('WebAppData')
@@ -30,14 +30,17 @@ function verifyTelegramHash(payload: Record<string, any>) {
     .map(([key, value]) => `${key}=${value}`)
     .join('\n');
 
+  log('Data check string:', dataCheckString);
+
   const hmac = createHmac('sha256', secretKey)
     .update(dataCheckString)
     .digest('hex');
 
+  log('Generated HMAC:', hmac);
+
   return hmac === hash;
 }
 
-/** Login function (Telegram) */
 export async function login(req: Request, res: Response) {
   try {
     log('Telegram login attempt', 'auth');
@@ -88,7 +91,6 @@ export async function login(req: Request, res: Response) {
   }
 }
 
-/** Get current logged-in user */
 export async function getCurrentUser(req: Request, res: Response) {
   if (!req.session?.userId) {
     return res.status(401).json({ message: "Not authenticated" });
@@ -103,7 +105,6 @@ export async function getCurrentUser(req: Request, res: Response) {
   return res.json({ user: userInfo });
 }
 
-/** Logout user */
 export async function logout(req: Request, res: Response) {
   req.session?.destroy((err) => {
     if (err) {
