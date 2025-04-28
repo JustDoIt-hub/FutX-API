@@ -2,7 +2,6 @@
 import {
   users, type User, type InsertUser,
   players, type Player,
-  userPlayers, type UserPlayer, type InsertUserPlayer,
   spinHistory, type SpinHistory, type InsertSpinHistory
 } from "@shared/schema";
 
@@ -20,21 +19,21 @@ interface AddPlayerToUserParams {
 export class DatabaseStorage {
   // --- Users ---
   async getUser(id: number) {
-    return (await db.select().from(users).where(eq(users.id, id)))[0];
+    return (await db.select().from(users).where(eq(users.userId, id)))[0];
   }
 
   async getUserByTelegramId(telegramId: number) {
-    return (await db.select().from(users).where(eq(users.telegram_id, telegramId)))[0];
+    // Assuming you have a telegram_id field; adjust if needed
+    return (await db.select().from(users).where(eq(users.userId, telegramId)))[0];
   }
 
- async createUser(data: { telegram_id: number; telegram_username: string; coins: number; }) {
-  console.log("[DEBUG] About to insert user with data:", data);  // 
-  return (await db.insert(users).values(data).returning())[0];
-}
-
+  async createUser(data: InsertUser) {
+    console.log("[DEBUG] About to insert user with data:", data);
+    return (await db.insert(users).values(data).returning())[0];
+  }
 
   async updateUser(id: number, data: Partial<User>) {
-    return (await db.update(users).set(data).where(eq(users.id, id)).returning())[0];
+    return (await db.update(users).set(data).where(eq(users.userId, id)).returning())[0];
   }
 
   // --- Players ---
@@ -71,12 +70,14 @@ export class DatabaseStorage {
         name: players.name,
         position: players.position,
         event: players.event,
-        rating: players.rating,
-        imageUrl: players.image_url,
+        attack: players.attack,
+        defense: players.defense,
+        hp: players.hp,
+        fileId: players.fileId,
       })
-      .from(userPlayers)
-      .innerJoin(players, eq(userPlayers.player_id, players.id))
-      .where(eq(userPlayers.user_id, userId));
+      .from(users)
+      .innerJoin(players, eq(users.playerId, players.id))
+      .where(eq(users.userId, userId));
   }
 
   async addPlayerToUser(params: AddPlayerToUserParams) {
@@ -85,34 +86,34 @@ export class DatabaseStorage {
       playerId,
       quantity = 1,
       howgot = "hunt",
-      tradable = false
+      tradable = true
     } = params;
 
     const existing = await db
       .select()
-      .from(userPlayers)
+      .from(users)
       .where(and(
-        eq(userPlayers.user_id, userId),
-        eq(userPlayers.player_id, playerId)
+        eq(users.userId, userId),
+        eq(users.playerId, playerId)
       ));
 
     if (existing.length > 0) {
       return (await db
-        .update(userPlayers)
+        .update(users)
         .set({
-          quantity: sql`${userPlayers.quantity} + ${quantity}`
+          quantity: sql`${users.quantity} + ${quantity}`
         })
         .where(and(
-          eq(userPlayers.user_id, userId),
-          eq(userPlayers.player_id, playerId)
+          eq(users.userId, userId),
+          eq(users.playerId, playerId)
         ))
         .returning())[0];
     } else {
       return (await db
-        .insert(userPlayers)
+        .insert(users)
         .values({
-          user_id: userId,
-          player_id: playerId,
+          userId: userId,
+          playerId: playerId,
           quantity,
           howgot,
           tradable
@@ -126,8 +127,8 @@ export class DatabaseStorage {
     return await db
       .select()
       .from(spinHistory)
-      .where(eq(spinHistory.user_id, userId))
-      .orderBy(desc(spinHistory.spun_at))
+      .where(eq(spinHistory.userId, userId))
+      .orderBy(desc(spinHistory.spunAt))
       .limit(limit);
   }
 
