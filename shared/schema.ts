@@ -35,7 +35,6 @@ export const users = pgTable("users", {
   tradable: boolean("tradable").default(true),
   howgot: varchar("howgot", { length: 20 }),
 }, (table) => ({
-  pk: primaryKey({ columns: [table.userId, table.playerId] }),
   quantityNonNegative: check("quantity_non_negative", sql`quantity >= 0`),
 }));
 
