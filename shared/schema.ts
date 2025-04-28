@@ -60,7 +60,7 @@ export const players = pgTable("players", {
 // Spin History
 export const spinHistory = pgTable("spin_history", {
   id: serial("id").primaryKey(),
-  userId: bigint("user_id", { mode: "number" }).notNull(),
+  userId: serial("user_id").primaryKey(),
   playerId: integer("player_id").notNull(),
   spunAt: timestamp("spun_at").defaultNow(),
 });
