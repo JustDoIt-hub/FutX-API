@@ -5,6 +5,7 @@ import {
 import { createInsertSchema } from "drizzle-zod";
 import { relations } from "drizzle-orm";
 import { z } from "zod";
+import { sql } from "drizzle-orm";
 
 // Enums
 export const positionEnum = pgEnum("position", [
