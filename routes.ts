@@ -158,10 +158,8 @@
 
 
 
-import type { Express } from "express";
+import type { Express, RequestHandler } from "express";
 import { createServer, type Server } from "http";
-import session from "express-session";
-import memorystore from "memorystore";
 import { WebSocketServer, WebSocket } from "ws";
 
 // Import controllers
@@ -179,56 +177,42 @@ import {
   recordTournamentMatchResult
 } from "./controllers/tournament";
 
-const MemoryStore = memorystore(session);
+// Track active WebSocket connections
 const activeConnections = new Map<number, WebSocket>();
 
-export async function registerRoutes(app: Express): Promise<Server> {
+// ✅ Accept sessionMiddleware from index.ts
+export async function registerRoutes(app: Express, sessionMiddleware: RequestHandler): Promise<Server> {
   const httpServer = createServer(app);
 
-  const sessionMiddleware = session({
-    name: 'fut.draft.session',
-    store: new MemoryStore({
-      checkPeriod: 86400000, // Clear expired sessions daily
-    }),
-    secret: process.env.SESSION_SECRET || "fut-draft-secret",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === "production", // Set to true in production
-      httpOnly: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
-      sameSite: 'lax',
-    },
-  });
-
+  // ✅ Use shared session middleware
   app.use(sessionMiddleware);
 
-  // User Authentication Routes
+  // ✅ Auth routes
   app.get('/api/auth/login', login);
   app.get('/api/auth/me', getCurrentUser);
   app.post('/api/auth/logout', logout);
 
-  // Spin Routes
+  // ✅ Spin
   app.get('/api/spin/options', getSpinOptions);
   app.post('/api/spin', performSpin);
   app.get('/api/spin/recent', getRecentSpins);
 
-  // Players Routes
+  // ✅ Players
   app.get('/api/players', getUserPlayers);
 
-  // Teams Routes
+  // ✅ Teams
   app.get('/api/teams', getUserTeams);
   app.post('/api/teams', createTeam);
   app.get('/api/teams/:id', getTeamDetails);
   app.put('/api/teams/:id', updateTeam);
   app.delete('/api/teams/:id', deleteTeam);
 
-  // Matches Routes
+  // ✅ Matches
   app.post('/api/matches/start', startMatch);
   app.get('/api/matches', getMatchHistory);
   app.get('/api/matches/:id', getMatchDetails);
 
-  // Tournaments Routes
+  // ✅ Tournaments
   app.get('/api/tournaments', getTournaments);
   app.post('/api/tournaments', createTournament);
   app.get('/api/tournaments/:id', getTournamentDetails);
@@ -237,7 +221,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/tournaments/:id/start', startTournament);
   app.post('/api/tournaments/:id/match/:round/:matchPosition', recordTournamentMatchResult);
 
-  // WebSocket Server
+  // ✅ WebSocket server setup
   const wss = new WebSocketServer({
     server: httpServer,
     path: '/ws',
@@ -247,6 +231,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   wss.on('connection', (ws: WebSocket) => {
     console.log('New WebSocket connection established', 'websocket');
+
+    (ws as any).userId = null;
 
     ws.on('message', (messageData: string) => {
       try {
@@ -281,6 +267,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`WebSocket connection closed for user ${userId}`, 'websocket');
       }
     });
+
+    ws.on('error', (err) => {
+      console.error('WebSocket error:', err.message);
+    });
+
+    ws.send(JSON.stringify({
+      type: 'connected',
+      message: 'Connected to FUT Draft WebSocket server'
+    }));
   });
 
   return httpServer;
