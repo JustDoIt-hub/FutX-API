@@ -1,5 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import cors from "cors";
+import session from "express-session";
 import { registerRoutes } from "./routes";
 
 // Simple logger function to replace `log` from vite.ts
@@ -7,19 +8,35 @@ const log = (...args: any[]) => console.log("[LOG]", ...args);
 
 const app = express();
 
+// Setup session middleware
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "super-secret-key",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false, // Set to true if using HTTPS
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
+    },
+  })
+);
+
+// Health check route
 app.get("/", (req: Request, res: Response) => {
   res.send("FutX API is up and running!");
 });
 
 // Enable CORS for your frontend (adjust origin as needed)
 app.use(cors({
-  origin: "https://fut-x.netlify.app", // Or use "*" for testing
+  origin: "https://fut-x.netlify.app", // Or "*" for development
   credentials: true,
 }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Custom request logger
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -38,11 +55,9 @@ app.use((req, res, next) => {
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
-
       if (logLine.length > 80) {
         logLine = logLine.slice(0, 79) + "…";
       }
-
       log(logLine);
     }
   });
@@ -50,9 +65,11 @@ app.use((req, res, next) => {
   next();
 });
 
+// Register all routes
 (async () => {
   const server = await registerRoutes(app);
 
+  // Error handler
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
@@ -60,6 +77,7 @@ app.use((req, res, next) => {
     throw err;
   });
 
+  // Start server
   const port = process.env.PORT || 5000;
   server.listen({
     port: +port,
