@@ -1,46 +1,52 @@
 import express, { type Request, Response, NextFunction } from "express";
 import cors from "cors";
 import session from "express-session";
+import memorystore from "memorystore";
 import { registerRoutes } from "./routes";
 
-// Simple logger function to replace `log` from vite.ts
+// Logger
 const log = (...args: any[]) => console.log("[LOG]", ...args);
 
 const app = express();
+const MemoryStore = memorystore(session);
 
-// Setup session middleware
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "super-secret-key",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: false, // Set to true if using HTTPS
-      httpOnly: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
-    },
-  })
-);
-
-// Health check route
-app.get("/", (req: Request, res: Response) => {
-  res.send("FutX API is up and running!");
+// ✅ Shared session middleware
+const sessionMiddleware = session({
+  name: 'fut.draft.sid',
+  store: new MemoryStore({
+    checkPeriod: 86400000, // prune expired entries every 24h
+  }),
+  secret: process.env.SESSION_SECRET || "super-secret-key",
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: false, // set to true if using HTTPS
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  },
 });
 
-// Enable CORS for your frontend (adjust origin as needed)
+// ✅ Apply session + CORS + parsers
+app.use(sessionMiddleware);
+
 app.use(cors({
-  origin: "https://fut-x.netlify.app", // Or "*" for development
+  origin: "https://fut-x.netlify.app", // frontend origin
   credentials: true,
 }));
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Custom request logger
+// ✅ Health check
+app.get("/", (_req: Request, res: Response) => {
+  res.send("FutX API is up and running!");
+});
+
+// ✅ Request logging
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
+  let capturedJsonResponse: Record<string, any> | undefined;
 
   const originalResJson = res.json;
   res.json = function (bodyJson, ...args) {
@@ -55,9 +61,7 @@ app.use((req, res, next) => {
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
+      if (logLine.length > 80) logLine = logLine.slice(0, 79) + "…";
       log(logLine);
     }
   });
@@ -65,11 +69,10 @@ app.use((req, res, next) => {
   next();
 });
 
-// Register all routes
+// ✅ Register routes and WebSocket using sessionMiddleware
 (async () => {
-  const server = await registerRoutes(app);
+  const server = await registerRoutes(app, sessionMiddleware);
 
-  // Error handler
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
@@ -77,7 +80,6 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // Start server
   const port = process.env.PORT || 5000;
   server.listen({
     port: +port,
