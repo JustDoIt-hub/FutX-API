@@ -121,70 +121,70 @@
 
 
 
-import { Request, Response } from 'express';
-import { storage } from '../storage';
-import 'express-session';
+// import { Request, Response } from 'express';
+// import { storage } from '../storage';
+// import 'express-session';
 
-declare module 'express-session' {
-  interface SessionData {
-    userId: number;
-  }
-}
+// declare module 'express-session' {
+//   interface SessionData {
+//     userId: number;
+//   }
+// }
 
-// Basic login: accepts userId from frontend
-export async function login(req: Request, res: Response) {
-  try {
-    const userId = Number(req.query.userId);
-    if (!userId) {
-      return res.status(400).json({ message: "Missing or invalid userId" });
-    }
+// // Basic login: accepts userId from frontend
+// export async function login(req: Request, res: Response) {
+//   try {
+//     const userId = Number(req.query.userId);
+//     if (!userId) {
+//       return res.status(400).json({ message: "Missing or invalid userId" });
+//     }
 
-    // Look for existing user
-    let user = await storage.getUserByTelegramId(userId); // now just userId
+//     // Look for existing user
+//     let user = await storage.getUserByTelegramId(userId); // now just userId
 
-    if (!user) {
-      // Create user if not found
-      user = await storage.createUser({
-        userId,
-        coins: 5000, // default coins
-      });
-    }
+//     if (!user) {
+//       // Create user if not found
+//       user = await storage.createUser({
+//         userId,
+//         coins: 5000, // default coins
+//       });
+//     }
 
-    if (req.session) {
-      req.session.userId = user.userId;
-    }
+//     if (req.session) {
+//       req.session.userId = user.userId;
+//     }
 
-    const { password, ...userInfo } = user;
-    return res.status(200).json({ message: 'Login successful', user: userInfo });
+//     const { password, ...userInfo } = user;
+//     return res.status(200).json({ message: 'Login successful', user: userInfo });
 
-  } catch (err) {
-    console.error("Login error:", err);
-    return res.status(500).json({ message: 'Login failed' });
-  }
-}
+//   } catch (err) {
+//     console.error("Login error:", err);
+//     return res.status(500).json({ message: 'Login failed' });
+//   }
+// }
 
-export async function getCurrentUser(req: Request, res: Response) {
-  if (!req.session?.userId) {
-    return res.status(401).json({ message: "Not authenticated" });
-  }
+// export async function getCurrentUser(req: Request, res: Response) {
+//   if (!req.session?.userId) {
+//     return res.status(401).json({ message: "Not authenticated" });
+//   }
 
-  const user = await storage.getUser(req.session.userId);
-  if (!user) {
-    return res.status(404).json({ message: "User not found" });
-  }
+//   const user = await storage.getUser(req.session.userId);
+//   if (!user) {
+//     return res.status(404).json({ message: "User not found" });
+//   }
 
-  const { password, ...userInfo } = user;
-  return res.json({ user: userInfo });
-}
+//   const { password, ...userInfo } = user;
+//   return res.json({ user: userInfo });
+// }
 
-export async function logout(req: Request, res: Response) {
-  req.session?.destroy(err => {
-    if (err) {
-      console.error("Failed to destroy session:", err);
-      return res.status(500).json({ message: "Logout failed" });
-    }
-    res.clearCookie("connect.sid");
-    return res.json({ message: "Logged out" });
-  });
-}
+// export async function logout(req: Request, res: Response) {
+//   req.session?.destroy(err => {
+//     if (err) {
+//       console.error("Failed to destroy session:", err);
+//       return res.status(500).json({ message: "Logout failed" });
+//     }
+//     res.clearCookie("connect.sid");
+//     return res.json({ message: "Logged out" });
+//   });
+// }
 
