@@ -123,94 +123,46 @@
 
 import { Request, Response } from 'express';
 import { storage } from '../storage';
-import { createHmac, createHash } from 'crypto';
 import 'express-session';
 
-// Telegram bot token from environment
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
-
-if (!TELEGRAM_BOT_TOKEN) {
-  throw new Error("Missing TELEGRAM_BOT_TOKEN in environment variables");
-}
-
-// Extend session type
 declare module 'express-session' {
   interface SessionData {
     userId: number;
   }
 }
 
-// Verify hash from Telegram
-function verifyTelegramHash(payload: Record<string, any>) {
-  const { hash, ...authData } = payload;
-
-  // Prevent replay attacks (optional but recommended)
-  if (Date.now() / 1000 - Number(authData.auth_date) > 86400) {
-    console.warn("Auth date too old");
-    return false;
-  }
-
-  const secretKey = createHash('sha256')
-    .update(TELEGRAM_BOT_TOKEN)
-    .digest();
-
-  const dataCheckString = Object.keys(authData)
-    .sort()
-    .map(key => `${key}=${authData[key]}`)
-    .join('\n');
-
-  const hmac = createHmac('sha256', secretKey)
-    .update(dataCheckString)
-    .digest('hex');
-
-  return hmac === hash;
-}
-
-// Login via Telegram
+// Basic login: accepts userId from frontend
 export async function login(req: Request, res: Response) {
   try {
-    const { id, auth_date, hash } = req.query;
-
-    if (!id || !auth_date || !hash) {
-      return res.status(400).json({ message: "Missing required Telegram fields" });
+    const userId = Number(req.query.userId);
+    if (!userId) {
+      return res.status(400).json({ message: "Missing or invalid userId" });
     }
 
-    const payload = {
-      id: Number(id),
-      auth_date: Number(auth_date),
-      hash: String(hash),
-    };
+    // Look for existing user
+    let user = await storage.getUserByTelegramId(userId); // now just userId
 
-    if (!verifyTelegramHash(payload)) {
-      return res.status(403).json({ message: 'Invalid Telegram login: hash mismatch' });
-    }
-
-    // Look for user
-    let user = await storage.getUserByTelegramId(payload.id);
-
-    // Create user if not found
     if (!user) {
+      // Create user if not found
       user = await storage.createUser({
-        telegram_id: payload.id,
-        coins: 5000, // default starting coins
+        userId,
+        coins: 5000, // default coins
       });
     }
 
-    // Store in session (optional)
     if (req.session) {
-      req.session.userId = user.id;
+      req.session.userId = user.userId;
     }
 
     const { password, ...userInfo } = user;
     return res.status(200).json({ message: 'Login successful', user: userInfo });
 
   } catch (err) {
-    console.error("Telegram login error:", err);
-    return res.status(500).json({ message: 'Telegram login failed' });
+    console.error("Login error:", err);
+    return res.status(500).json({ message: 'Login failed' });
   }
 }
 
-// Get current logged-in user
 export async function getCurrentUser(req: Request, res: Response) {
   if (!req.session?.userId) {
     return res.status(401).json({ message: "Not authenticated" });
@@ -225,7 +177,6 @@ export async function getCurrentUser(req: Request, res: Response) {
   return res.json({ user: userInfo });
 }
 
-// Logout user
 export async function logout(req: Request, res: Response) {
   req.session?.destroy(err => {
     if (err) {
