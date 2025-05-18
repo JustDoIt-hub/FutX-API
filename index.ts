@@ -8,6 +8,7 @@ import { registerRoutes } from "./routes";
 const log = (...args: any[]) => console.log("[LOG]", ...args);
 
 const app = express();
+app.set("trust proxy", 1);
 const MemoryStore = memorystore(session);
 
 // ✅ Shared session middleware
