@@ -188,9 +188,9 @@ export async function registerRoutes(app: Express, sessionMiddleware: RequestHan
   app.use(sessionMiddleware);
 
   // ✅ Auth routes
-  app.get('/api/auth/login', login);
-  app.get('/api/auth/me', getCurrentUser);
-  app.post('/api/auth/logout', logout);
+  // app.get('/api/auth/login', login);
+  // app.get('/api/auth/me', getCurrentUser);
+  // app.post('/api/auth/logout', logout);
 
   // ✅ Spin
   app.get('/api/spin/options', getSpinOptions);
